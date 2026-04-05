@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Elif Phonics</title>
+  <style>
+    /* ─── Reset & Variables ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #FFF9F0;
+      --header-bg:   #FF6B6B;
+      --short-a:     #FFD93D;
+      --short-e:     #6BCB77;
+      --vowel-color: #FF4500;
+      --btn-blue:    #4D96FF;
+      --btn-blue-dk: #2979FF;
+      --card-bg:     #FFFFFF;
+      --shadow:      0 4px 12px rgba(0,0,0,0.10);
+      --radius:      16px;
+      --font:        'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', cursive;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      min-height: 100vh;
+      color: #333;
+    }
+
+    /* ─── Header ────────────────────────────────────────────────────── */
+    header {
+      background: var(--header-bg);
+      padding: 0.75rem 1.25rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.75rem;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    header h1 {
+      color: #fff;
+      font-size: clamp(1.2rem, 4vw, 1.7rem);
+      text-shadow: 2px 2px 0 rgba(0,0,0,0.15);
+      flex-shrink: 0;
+    }
+
+    #star-counter {
+      background: #fff;
+      color: #FF6B6B;
+      font-weight: bold;
+      font-size: 1rem;
+      padding: 0.3rem 0.8rem;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      box-shadow: var(--shadow);
+      flex-shrink: 0;
+    }
+
+    #star-counter .star-icon { font-size: 1.2rem; }
+
+    #filter-tabs {
+      display: flex;
+      gap: 0.4rem;
+      margin-left: auto;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      background: rgba(255,255,255,0.25);
+      color: #fff;
+      border: 2px solid rgba(255,255,255,0.5);
+      padding: 0.35rem 0.9rem;
+      border-radius: 999px;
+      font-family: var(--font);
+      font-size: 0.95rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, transform 0.1s;
+    }
+
+    .tab-btn:hover { background: rgba(255,255,255,0.45); transform: scale(1.05); }
+
+    .tab-btn.tab--active {
+      background: #fff;
+      color: var(--header-bg);
+      border-color: #fff;
+    }
+
+    /* ─── Card Grid ─────────────────────────────────────────────────── */
+    #card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 1rem;
+      padding: 1.25rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* ─── Individual Card ───────────────────────────────────────────── */
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 3px solid transparent;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0.6rem 0.6rem 0.8rem;
+      cursor: pointer;
+      transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
+      position: relative;
+      overflow: hidden;
+      /* animation set per-card via inline style */
+      opacity: 0;
+      animation: cardFadeIn 0.4s ease forwards;
+    }
+
+    @keyframes cardFadeIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .card:hover {
+      transform: scale(1.06) translateY(-3px);
+      box-shadow: 0 8px 22px rgba(0,0,0,0.16);
+    }
+
+    .card:focus-visible {
+      outline: 3px solid var(--btn-blue);
+      outline-offset: 2px;
+    }
+
+    /* Group accents — colored left border strip */
+    .card--short-a { border-left: 5px solid var(--short-a); }
+    .card--short-e { border-left: 5px solid var(--short-e); }
+
+    /* Heard star badge */
+    .card--heard::after {
+      content: "★";
+      position: absolute;
+      top: 5px;
+      right: 7px;
+      font-size: 1.1rem;
+      color: var(--short-a);
+      text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      pointer-events: none;
+    }
+
+    /* Rhyme friend glow */
+    .card--rhyme-friend {
+      border-color: var(--short-a);
+      box-shadow: 0 0 0 3px var(--short-a), var(--shadow);
+    }
+
+    .card--hidden { display: none; }
+
+    .card__img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      border-radius: 10px;
+      display: block;
+    }
+
+    .card__label {
+      margin-top: 0.55rem;
+      font-size: 1.15rem;
+      font-weight: bold;
+      letter-spacing: 0.02em;
+      text-align: center;
+    }
+
+    .card__badge {
+      margin-top: 0.25rem;
+      font-size: 0.7rem;
+      font-weight: bold;
+      letter-spacing: 0.05em;
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+      color: #555;
+      background: #f0ece3;
+    }
+
+    /* ─── Spotlight Overlay ─────────────────────────────────────────── */
+    #spotlight {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 1rem;
+      /* hidden by default */
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    #spotlight.spotlight--active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    #spot-panel {
+      background: #fff;
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.30);
+      padding: 1.5rem 1.75rem 1.75rem;
+      max-width: 420px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+      transform: scale(0.88) translateY(20px);
+      transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1);
+      position: relative;
+    }
+
+    #spotlight.spotlight--active #spot-panel {
+      transform: scale(1) translateY(0);
+    }
+
+    #spot-close {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.9rem;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #aaa;
+      line-height: 1;
+      padding: 0.2rem 0.4rem;
+      border-radius: 6px;
+      transition: color 0.15s, background 0.15s;
+    }
+    #spot-close:hover { color: #FF6B6B; background: #fff0f0; }
+
+    #spot-img {
+      width: 100%;
+      max-height: 220px;
+      object-fit: contain;
+      border-radius: 14px;
+      background: var(--bg);
+      padding: 0.5rem;
+    }
+
+    #spot-rime-split {
+      font-size: clamp(1.4rem, 5vw, 2.2rem);
+      font-weight: bold;
+      letter-spacing: 0.04em;
+      text-align: center;
+      color: #444;
+    }
+
+    #spot-rime-split .onset {
+      color: #bbb;
+      font-weight: 600;
+    }
+
+    #spot-rime-split .rime {
+      color: var(--vowel-color);
+      font-weight: 900;
+    }
+
+    #spot-word {
+      font-size: clamp(2rem, 8vw, 3.5rem);
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-align: center;
+      color: #222;
+      line-height: 1.1;
+    }
+
+    .vowel {
+      color: var(--vowel-color);
+      font-weight: 900;
+    }
+
+    #spot-family {
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: #777;
+      background: #f5f0e8;
+      padding: 0.25rem 0.9rem;
+      border-radius: 999px;
+    }
+
+    #spot-rhyme-friends {
+      font-size: 0.85rem;
+      color: #888;
+      text-align: center;
+    }
+
+    #spot-rhyme-friends strong { color: #555; }
+
+    #spot-replay {
+      background: var(--btn-blue);
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      padding: 0.6rem 1.6rem;
+      font-family: var(--font);
+      font-size: 1.05rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 12px rgba(77,150,255,0.35);
+      transition: background 0.15s, transform 0.1s;
+      margin-top: 0.25rem;
+    }
+    #spot-replay:hover { background: var(--btn-blue-dk); transform: scale(1.05); }
+    #spot-replay:active { transform: scale(0.97); }
+
+    /* ─── Responsive tweaks ──────────────────────────────────────────── */
+    @media (max-width: 480px) {
+      #card-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 0.7rem; padding: 0.75rem; }
+      #filter-tabs { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ─── Header ─────────────────────────────────────────────────────── -->
+  <header>
+    <h1>🔤 Elif Phonics</h1>
+
+    <div id="star-counter" aria-live="polite" aria-label="Words heard">
+      <span class="star-icon">★</span>
+      <span id="star-count">0</span>
+      <span>/ 19</span>
+    </div>
+
+    <nav id="filter-tabs" role="tablist" aria-label="Filter by vowel sound">
+      <button class="tab-btn tab--active" data-filter="all"     role="tab" aria-pressed="true"  aria-label="Show all words">All</button>
+      <button class="tab-btn"             data-filter="short-a" role="tab" aria-pressed="false" aria-label="Show short-A words">Short-A</button>
+      <button class="tab-btn"             data-filter="short-e" role="tab" aria-pressed="false" aria-label="Show short-E words">Short-E</button>
+    </nav>
+  </header>
+
+  <!-- ─── Card Grid ──────────────────────────────────────────────────── -->
+  <main>
+    <div id="card-grid" role="list" aria-label="Phonics word cards"></div>
+  </main>
+
+  <!-- ─── Spotlight Overlay ─────────────────────────────────────────── -->
+  <div id="spotlight" role="dialog" aria-modal="true" aria-labelledby="spot-word">
+    <div id="spot-panel">
+      <button id="spot-close" aria-label="Close">✕</button>
+      <img id="spot-img" src="" alt="" />
+      <div id="spot-rime-split" aria-hidden="true"></div>
+      <div id="spot-word" aria-live="assertive"></div>
+      <div id="spot-family"></div>
+      <div id="spot-rhyme-friends"></div>
+      <button id="spot-replay" aria-label="Replay the word">
+        <span aria-hidden="true">🔊</span> Hear it again!
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // ═══════════════════════════════════════════════════════════════════
+    // DATA
+    // ═══════════════════════════════════════════════════════════════════
+    const WORDS = [
+      // Short-A
+      { word: "cat",   img: "cat.jpg",   audio: "cat.mp3",   group: "short-a", family: "-at",  onset: "c",  rime: "at"  },
+      { word: "rat",   img: "rat.jpg",   audio: "rat.mp3",   group: "short-a", family: "-at",  onset: "r",  rime: "at"  },
+      { word: "mat",   img: "mat.webp",  audio: "mat.mp3",   group: "short-a", family: "-at",  onset: "m",  rime: "at"  },
+      { word: "can",   img: "can.png",   audio: "can.mp3",   group: "short-a", family: "-an",  onset: "c",  rime: "an"  },
+      { word: "fan",   img: "fan.jpg",   audio: "fan.mp3",   group: "short-a", family: "-an",  onset: "f",  rime: "an"  },
+      { word: "cap",   img: "cap.jpg",   audio: "cap.mp3",   group: "short-a", family: "-ap",  onset: "c",  rime: "ap"  },
+      { word: "map",   img: "map.jpg",   audio: "map.mp3",   group: "short-a", family: "-ap",  onset: "m",  rime: "ap"  },
+      { word: "clap",  img: "clap.png",  audio: "clap.mp3",  group: "short-a", family: "-ap",  onset: "cl", rime: "ap"  },
+      { word: "jam",   img: "jam.jpg",   audio: "jam.mp3",   group: "short-a", family: "-am",  onset: "j",  rime: "am"  },
+      { word: "black", img: "black.jpg", audio: "black.mp3", group: "short-a", family: "-ack", onset: "bl", rime: "ack" },
+      // Short-E
+      { word: "bed",   img: "bed.jpg",   audio: "bed.mp3",   group: "short-e", family: "-ed",  onset: "b",  rime: "ed"  },
+      { word: "red",   img: "red.png",   audio: "red.mp3",   group: "short-e", family: "-ed",  onset: "r",  rime: "ed"  },
+      { word: "leg",   img: "leg.png",   audio: "leg.mp3",   group: "short-e", family: "-eg",  onset: "l",  rime: "eg"  },
+      { word: "peg",   img: "peg.jpg",   audio: "peg.mp3",   group: "short-e", family: "-eg",  onset: "p",  rime: "eg"  },
+      { word: "pet",   img: "pet.png",   audio: "pet.mp3",   group: "short-e", family: "-et",  onset: "p",  rime: "et"  },
+      { word: "pen",   img: "pen.jpg",   audio: "pen.mp3",   group: "short-e", family: "-en",  onset: "p",  rime: "en"  },
+      { word: "nest",  img: "nest.jpg",  audio: "nest.mp3",  group: "short-e", family: "-est", onset: "n",  rime: "est" },
+      { word: "egg",   img: "egg.png",   audio: "egg.mp3",   group: "short-e", family: "-egg", onset: "",   rime: "egg" },
+      { word: "jell",  img: "jell.jpg",  audio: "jell.mp3",  group: "short-e", family: "-ell", onset: "j",  rime: "ell" },
+    ];
+
+    // ═══════════════════════════════════════════════════════════════════
+    // STATE
+    // ═══════════════════════════════════════════════════════════════════
+    const state = {
+      activeFilter: "all",
+      spotlightWord: null,
+      heardWords: new Set(),
+      currentAudio: null,
+    };
+
+    // ═══════════════════════════════════════════════════════════════════
+    // HELPERS
+    // ═══════════════════════════════════════════════════════════════════
+    const VOWELS = new Set(['a','e','i','o','u']);
+
+    function highlightVowels(word) {
+      return [...word].map(ch =>
+        VOWELS.has(ch.toLowerCase())
+          ? `<span class="vowel">${ch}</span>`
+          : ch
+      ).join('');
+    }
+
+    function renderOnsetRime(onset, rime) {
+      const rimeHL = highlightVowels(rime).replace(
+        /<span class="vowel">([^<]+)<\/span>/g,
+        '<span class="vowel">$1</span>'
+      );
+      if (!onset) {
+        return `<span class="rime">${rimeHL.toUpperCase()}</span>`;
+      }
+      return `<span class="onset">${onset.toUpperCase()}</span> · <span class="rime">${rimeHL.toUpperCase()}</span>`;
+    }
+
+    function getWordData(word) {
+      return WORDS.find(w => w.word === word);
+    }
+
+    function getFamilyMembers(family) {
+      return WORDS.filter(w => w.family === family).map(w => w.word);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // AUDIO
+    // ═══════════════════════════════════════════════════════════════════
+    function playAudio(src) {
+      if (state.currentAudio) {
+        state.currentAudio.pause();
+        state.currentAudio.currentTime = 0;
+      }
+      const audio = new Audio(src);
+      state.currentAudio = audio;
+      audio.play().catch(() => {});
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // RENDER
+    // ═══════════════════════════════════════════════════════════════════
+    function renderCards() {
+      const grid = document.getElementById('card-grid');
+      WORDS.forEach((w, i) => {
+        const btn = document.createElement('button');
+        btn.className = `card card--${w.group}`;
+        btn.dataset.word = w.word;
+        btn.dataset.group = w.group;
+        btn.dataset.family = w.family;
+        btn.style.animationDelay = `${i * 55}ms`;
+        btn.setAttribute('role', 'listitem');
+        btn.setAttribute('aria-label', `Hear the word: ${w.word}`);
+        btn.innerHTML = `
+          <img class="card__img" src="${w.img}" alt="${w.word}" loading="lazy">
+          <span class="card__label">${w.word}</span>
+          <span class="card__badge">${w.family}</span>
+        `;
+        grid.appendChild(btn);
+      });
+    }
+
+    function applyFilter(filter) {
+      document.querySelectorAll('.card').forEach(card => {
+        const show = filter === 'all' || card.dataset.group === filter;
+        card.classList.toggle('card--hidden', !show);
+      });
+    }
+
+    function updateSpotlight(wordData) {
+      document.getElementById('spot-img').src = wordData.img;
+      document.getElementById('spot-img').alt = wordData.word;
+      document.getElementById('spot-word').innerHTML = highlightVowels(wordData.word);
+      document.getElementById('spot-rime-split').innerHTML = renderOnsetRime(wordData.onset, wordData.rime);
+      document.getElementById('spot-family').textContent = wordData.family + ' family';
+
+      const members = getFamilyMembers(wordData.family).filter(w => w !== wordData.word);
+      const friendsEl = document.getElementById('spot-rhyme-friends');
+      if (members.length > 0) {
+        friendsEl.innerHTML = `<strong>Rhyme friends:</strong> ${members.join(', ')}`;
+      } else {
+        friendsEl.textContent = '';
+      }
+
+      state.spotlightWord = wordData.word;
+      document.getElementById('spotlight').classList.add('spotlight--active');
+    }
+
+    function closeSpotlight() {
+      document.getElementById('spotlight').classList.remove('spotlight--active');
+      state.spotlightWord = null;
+      document.querySelectorAll('.card--rhyme-friend').forEach(c =>
+        c.classList.remove('card--rhyme-friend')
+      );
+    }
+
+    function updateRhymeFriends(family) {
+      document.querySelectorAll('.card').forEach(card => {
+        card.classList.toggle('card--rhyme-friend', card.dataset.family === family);
+      });
+    }
+
+    function markCardHeard(word) {
+      if (state.heardWords.has(word)) return;
+      state.heardWords.add(word);
+      const card = document.querySelector(`.card[data-word="${word}"]`);
+      if (card) card.classList.add('card--heard');
+      saveHeardWords();
+    }
+
+    function updateStarCounter() {
+      document.getElementById('star-count').textContent = state.heardWords.size;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // PERSISTENCE
+    // ═══════════════════════════════════════════════════════════════════
+    function saveHeardWords() {
+      try {
+        localStorage.setItem('elif_heard', JSON.stringify([...state.heardWords]));
+      } catch (_) {}
+    }
+
+    function loadHeardWords() {
+      try {
+        const saved = localStorage.getItem('elif_heard');
+        if (saved) {
+          JSON.parse(saved).forEach(w => state.heardWords.add(w));
+        }
+      } catch (_) {}
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // EVENT HANDLERS
+    // ═══════════════════════════════════════════════════════════════════
+    function onCardClick(wordData) {
+      playAudio(wordData.audio);
+      markCardHeard(wordData.word);
+      updateStarCounter();
+      updateSpotlight(wordData);
+      updateRhymeFriends(wordData.family);
+    }
+
+    function onFilterClick(filter) {
+      state.activeFilter = filter;
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        const active = btn.dataset.filter === filter;
+        btn.classList.toggle('tab--active', active);
+        btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
+      applyFilter(filter);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // INIT
+    // ═══════════════════════════════════════════════════════════════════
+    function init() {
+      renderCards();
+
+      // Restore heard words from localStorage
+      loadHeardWords();
+      state.heardWords.forEach(word => {
+        const card = document.querySelector(`.card[data-word="${word}"]`);
+        if (card) card.classList.add('card--heard');
+      });
+      updateStarCounter();
+
+      // Apply default filter
+      applyFilter('all');
+
+      // Card grid click delegation
+      document.getElementById('card-grid').addEventListener('click', e => {
+        const card = e.target.closest('[data-word]');
+        if (!card) return;
+        const wordData = getWordData(card.dataset.word);
+        if (wordData) onCardClick(wordData);
+      });
+
+      // Filter tabs
+      document.getElementById('filter-tabs').addEventListener('click', e => {
+        const btn = e.target.closest('.tab-btn');
+        if (!btn) return;
+        onFilterClick(btn.dataset.filter);
+      });
+
+      // Spotlight replay
+      document.getElementById('spot-replay').addEventListener('click', () => {
+        if (state.spotlightWord) {
+          const wordData = getWordData(state.spotlightWord);
+          if (wordData) playAudio(wordData.audio);
+        }
+      });
+
+      // Spotlight close button
+      document.getElementById('spot-close').addEventListener('click', closeSpotlight);
+
+      // Click on dim overlay (not the panel) closes spotlight
+      document.getElementById('spotlight').addEventListener('click', e => {
+        if (e.target === document.getElementById('spotlight')) closeSpotlight();
+      });
+
+      // Escape key closes spotlight
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') closeSpotlight();
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
